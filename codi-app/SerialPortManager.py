@@ -53,6 +53,11 @@ def get_socket():
         thread.join(4)
     return socket
 
+    try:
+        socket.cancel_read()
+    except:
+        socket.close()
+
 def readFromSerial():
     global socket
     global isRunning
