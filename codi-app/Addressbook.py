@@ -1,5 +1,6 @@
 import sqlite3
 import CodiStatus
+import getpass
 
 def contactNameForNumber(number, defaultToNumber=False):
     for c in CodiStatus.Contacts:

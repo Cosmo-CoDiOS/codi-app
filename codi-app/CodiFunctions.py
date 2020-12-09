@@ -9,6 +9,7 @@ import codi_mtk_generated_functions as mtkCmd
 import LEDManager
 import sqlite3
 import EventListener as Event
+import getpass
 
 tapHistory = False
 
