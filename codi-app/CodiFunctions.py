@@ -20,6 +20,9 @@ def datetime_from_utc_to_local(utc_datetime):
 
 # ST32 calls these functions
 
+def DateTimeFormat():
+    mtkCmd.DateTimeFormat("", 1)
+
 def GetBatteryLevel():
     mtkCmd.BatteryLevelInfo(CodiStatus.DeviceInfo.batteryLevel)
 
@@ -71,6 +74,7 @@ def GetDateTime():
         int(now.strftime('%M')),
         int(now.strftime('%S')),
         0)
+    DateTimeFormat()
 
 def ActionCall(action, sim, line, numtype, msisdn, contact, contact_id):
     try:
@@ -80,7 +84,7 @@ def ActionCall(action, sim, line, numtype, msisdn, contact, contact_id):
             if sim == 2:
                 ril = DBusServer.ril1
             ril.Dial(msisdn, '')
-            conn = sqlite3.connect('/home/cosmo/.local/share/history-service/history.sqlite')
+            conn = sqlite3.connect('/home/phablet/.local/share/history-service/history.sqlite')
             try:
                 c = conn.cursor()
                 statement = 'insert into voice_events values ("ofono/ofono/ril_0", "' + msisdn + \
@@ -168,7 +172,7 @@ def CoDiOFF(par1, par2):
 
 def GetCallHistory(index):
     batchSize = 10
-    conn = sqlite3.connect('/home/cosmo/.local/share/history-service/history.sqlite')
+    conn = sqlite3.connect('/home/phablet/.local/share/history-service/history.sqlite')
     try:
         c = conn.cursor()
         totalCdr = c.execute('select count(*) from voice_events').fetchall()[0][0]
@@ -190,8 +194,8 @@ def GetCallHistory(index):
                 dt = datetime.strptime(history[i][4][0:19], '%Y-%m-%dT%H:%M:%S')
                 dt = datetime_from_utc_to_local(dt)
                 # print(history[i])
-                # print(i, totalCdr, batchSize, history[i][1], history[i][1], dt.day, dt.month, dt.year, dt.hour, dt.minute, dt.second, 0, state)
-                mtkCmd.CallHistoryInfo(i, totalCdr, batchSize, Addressbook.contactNameForNumber(history[i][1]), history[i][1], dt.day, dt.month, dt.year, dt.hour, dt.minute, dt.second, 0, state)
+                # print(i, totalCdr, batchSize, history[i][1], history[i][1], dt.day, dt.month-1, dt.year, dt.hour, dt.minute, dt.second, 0, state)
+                mtkCmd.CallHistoryInfo(i, totalCdr, batchSize, Addressbook.contactNameForNumber(history[i][1], True), history[i][1], dt.day, dt.month-1, dt.year, dt.hour, dt.minute, dt.second, 0, state)
             except Exception as e:
                 print('Exception:', e)
     except Exception as e:
