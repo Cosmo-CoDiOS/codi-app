@@ -1,6 +1,7 @@
 import serial
 import struct
 import threading
+import time
 import codi_st32_generated_functions as st32Cmd
 
 isRunning = True
@@ -23,36 +24,53 @@ def init():
 def stop():
     global isRunning
     global socket
+    global thread
 
     isRunning = False
     try:
         socket.cancel_read()
     except:
         socket.close()
+    socket.cancel_read()
+    time.sleep(0.1)
+    socket.close()
+    thread.join(4)
+
+
+def getSocket():
+    global socket
+    global isRunning
+    global thread
+    global inUpload
+
+    isRunning = False
+    inUpload = False
+    if socket is not None:
+        socket.cancel_read()
+    if thread is not None:
+        thread.join(4)
+    return socket
 
 def readFromSerial():
     global socket
     global isRunning
 
     msgHeader = bytes.fromhex('58 21 58 21')
-    print('Listening...')
+    print('[115200]Listening...')
     while isRunning:
         header = socket.read_until(msgHeader, size=300)
         # print('Found header', len(header), header)
 
         # Read Size
-        try:
-            if len(header) >= 4:
-                msgSize = struct.unpack('>I', socket.read(4))[0]
-                # print('Found message size', msgSize)
-                if msgSize <= 300:
-                    msg = socket.read(msgSize-8)
-                    st32Cmd.readMessage(msg)
-                else:
-                    if isRunning:
-                        print('Message length wrong, ignoring msg')
-        except:
-            print('Ignoring malformed packet', header)
+        if len(header) >= 4 and isRunning and header[0:4] == msgHeader:
+            msgSize = struct.unpack('>I', socket.read(4))[0]
+            # print('[115200]Found message size', msgSize)
+            if msgSize <= 300 and isRunning:
+                msg = socket.read(msgSize-8)
+                st32Cmd.readMessage(msg)
+            else:
+                if isRunning:
+                    print('[115200]Message length wrong, ignoring msg')
 
 def sendCommand(cmd):
     global socket
@@ -64,3 +82,60 @@ def sendCommand(cmd):
         lock.release()
     except Exception as e:
         print(e)
+
+
+def uploadReadFromSerial():
+    global socket
+    global isRunning
+
+    print('[230400]Listening...')
+    while isRunning:
+        uploadResponse = socket.read()
+        print('[230400]Response', uploadResponse)
+
+
+def switchToUploadMode():
+    global socket
+    global lock
+    global thread
+    global isRunning
+
+    try:
+        isRunning = False
+        if socket is not None:
+            socket.cancel_read()
+            time.sleep(1)
+            socket.close()
+        if thread is not None:
+            thread.join(4)
+
+        socket = serial.Serial('/dev/ttyS1', baudrate=230400, timeout=4)
+        thread = threading.Thread(target=uploadReadFromSerial)
+        isRunning = True
+        thread.start()
+    except Exception as e:
+        print(e)
+
+
+def switchToCmdMode():
+    global socket
+    global lock
+    global thread
+    global isRunning
+
+    try:
+        isRunning = False
+        if socket is not None:
+            socket.cancel_read()
+            time.sleep(1)
+            socket.close()
+        if thread is not None:
+            thread.join(4)
+
+        socket = serial.Serial('/dev/ttyS1', baudrate=115200)
+        thread = threading.Thread(target=readFromSerial)
+        isRunning = True
+        thread.start()
+    except Exception as e:
+        print(e)
+
