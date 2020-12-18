@@ -2,8 +2,10 @@ import serial
 import struct
 import threading
 import time
+import logging
 import codi_st32_generated_functions as st32Cmd
 
+log = logging.getLogger('codi')
 isRunning = True
 socket = None
 thread = None
@@ -19,7 +21,7 @@ def init():
         thread = threading.Thread(target=readFromSerial)
         thread.start()
     except Exception as e:
-        print(e)
+        log.error(e)
 
 def stop():
     global isRunning
@@ -37,7 +39,7 @@ def stop():
     thread.join(4)
 
 
-def getSocket():
+def get_socket():
     global socket
     global isRunning
     global thread
@@ -56,7 +58,7 @@ def readFromSerial():
     global isRunning
 
     msgHeader = bytes.fromhex('58 21 58 21')
-    print('[115200]Listening...')
+    log.info('[115200]Listening...')
     while isRunning:
         header = socket.read_until(msgHeader, size=300)
         # print('Found header', len(header), header)
@@ -70,7 +72,7 @@ def readFromSerial():
                 st32Cmd.readMessage(msg)
             else:
                 if isRunning:
-                    print('[115200]Message length wrong, ignoring msg')
+                    log.error('[115200]Message length wrong, ignoring msg')
 
 def sendCommand(cmd):
     global socket
@@ -81,19 +83,19 @@ def sendCommand(cmd):
         socket.write(cmd)
         lock.release()
     except Exception as e:
-        print(e)
+        log.error(e)
 
 
 def uploadReadFromSerial():
     global socket
     global isRunning
 
-    print('[230400]Listening...')
+    log.info('[230400]Listening...')
     while isRunning:
         uploadResponse = socket.read()
         if socket.in_waiting > 0:
             uploadResponse += socket.read(socket.in_waiting)
-        print('[230400]Response', uploadResponse)
+        log.debug('[230400]Response %r', uploadResponse)
 
 
 def switchToUploadMode():
@@ -116,7 +118,7 @@ def switchToUploadMode():
         isRunning = True
         thread.start()
     except Exception as e:
-        print(e)
+        log.error(e)
 
 
 def switchToCmdMode():
@@ -139,5 +141,5 @@ def switchToCmdMode():
         isRunning = True
         thread.start()
     except Exception as e:
-        print(e)
+        log.error(e)
 

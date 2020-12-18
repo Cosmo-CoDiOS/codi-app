@@ -1,6 +1,9 @@
 import sqlite3
 import CodiStatus
 import getpass
+import logging
+
+log = logging.getLogger('codi')
 
 def contactNameForNumber(number, defaultToNumber=False):
     for c in CodiStatus.Contacts:
@@ -52,4 +55,4 @@ def refreshContacts():
         c.close()
         conn.close()
     except Exception as e:
-        print('Exception:', e)
+        log.error("Exception: %r", e)
