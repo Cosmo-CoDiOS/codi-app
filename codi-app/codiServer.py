@@ -22,16 +22,6 @@ import EventListener
 import Addressbook
 import lock_file
 
-class writer(object):
-    def __init__(self, file):
-        self.log = open(file, 'w+')
-    def write(self, data):
-        self.log.write(data)
-        self.log.flush()
-
-sys.stdout = writer('/tmp/codi.out')
-sys.stderr = writer('/tmp/codi.err')
-
 def signalHandler(_signo, _stack_frame):
     mtkCmd.SetMouse(0, 1)
     mtkCmd.SetCoDiStatus(3, 3, 3)
