@@ -39,7 +39,7 @@ lock_file.lock(lock)
 CodiStatus.init()
 
 def initCodi():
-    Addressbook.refreshContacts()
+    Addressbook.get_contacts_from_dbus()
     mtkCmd.SetCoDiStatus(1, 7, 1)
     mtkCmd.SetMouse(1, 1)
     cf.GetDateTime()
