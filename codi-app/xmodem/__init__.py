@@ -78,10 +78,11 @@ DLE = b'\x10'
 NAK = b'\x15'
 CAN = b'\x18'
 CAN2 = b'\x98'
-CRC = b'C' #0x43
+CRC = b'C'  # 0x43
 CRC2 = b'\xc3'
 CRC3 = b'\x83'
-ABT = b'a' #0x61 - flash fail - abort
+ABT = b'a'  # 0x61 - flash fail - abort
+
 
 class YMODEM(object):
     '''
@@ -204,14 +205,15 @@ class YMODEM(object):
                     if cancel:
                         self.log.info('Transmission canceled: received 2xCAN '
                                       'at start-sequence')
-                        print("Remote side requested cancel, suggest trying again later")
+                        print(
+                            "Remote side requested cancel, suggest trying again later")
                         return False
                     else:
                         self.log.debug('cancellation at start sequence.')
                         cancel = 1
                 else:
                     self.log.info('send error: expected NAK, CRC, or CAN; '
-                                   'got %r', char)
+                                  'got %r', char)
 
             error_count += 1
             if error_count > retry:
@@ -230,7 +232,8 @@ class YMODEM(object):
         #  Filename Length [Modification-Date [Mode [Serial-Number]]]
         stream = open(filename, 'rb')
         stat = os.stat(filename)
-        data = os.path.basename(filename).encode() + NUL + str(stat.st_size).encode()
+        data = os.path.basename(filename).encode() + \
+            NUL + str(stat.st_size).encode()
         self.log.debug('ymodem sending : "%s" len:%d', filename, stat.st_size)
 
         if len(data) <= 128:
@@ -245,28 +248,33 @@ class YMODEM(object):
         header_sent = False
 
         while not header_sent:
-            self.log.debug('header send: block %d, pks: %d', sequence, header_size)
+            self.log.debug('header send: block %d, pks: %d',
+                           sequence, header_size)
             self.ser.write(header + data + checksum)
             while True:
                 char = self.ser.read(1)
                 if char == CRC or char == CRC2 or char == CRC3:
                     in_waiting = self.ser.in_waiting
                     if in_waiting == 0:
-                        self.log.debug('header re-send: block %d, pks: %d', sequence, packet_size)
+                        self.log.debug(
+                            'header re-send: block %d, pks: %d', sequence, packet_size)
                         self.ser.write(header + data + checksum)
                     elif in_waiting > 1:
                         rubbish = self.ser.read(in_waiting-1)
-                        self.log.info('header got rubbish %r for block %d', rubbish, sequence)
+                        self.log.info(
+                            'header got rubbish %r for block %d', rubbish, sequence)
                     continue
                 if char == ACK or char == ACK2:
                     success_count += 1
                     if callable(callback):
-                        callback(total_packets, success_count, error_count, total)
+                        callback(total_packets, success_count,
+                                 error_count, total)
                     error_count = 0
                     header_sent = True
                     break
 
-                self.log.info('send error: expected CRC|ACK; got %r for block %d', char, sequence)
+                self.log.info(
+                    'send error: expected CRC|ACK; got %r for block %d', char, sequence)
                 error_count += 1
                 if callable(callback):
                     callback(total_packets, success_count, error_count, total)
@@ -274,14 +282,14 @@ class YMODEM(object):
                     # excessive amounts of retransmissions requested,
                     # abort transfer
                     self.log.info('header send error: Unexpected received %d times, '
-                    'aborting.', error_count)
+                                  'aborting.', error_count)
                     self.abort(timeout=timeout)
                     return False
 
             # keep track of sequence
             sequence = (sequence + 1) % 0x100
 
-        #send data
+        # send data
         while True:
             # build normal data packet
             data = stream.read(packet_size)
@@ -297,7 +305,8 @@ class YMODEM(object):
 
             # emit packet & get ACK
             if not slow_mode:
-                self.log.debug('send: block %d, pks: %d', sequence, packet_size)
+                self.log.debug('send: block %d, pks: %d',
+                               sequence, packet_size)
                 self.ser.write(header + data + checksum)
 
             while True:
@@ -305,35 +314,44 @@ class YMODEM(object):
                 if char == CRC or char == CRC2 or char == CRC3:
                     in_waiting = self.ser.in_waiting
                     if slow_mode:
-                        self.log.debug('send: block %d, pks: %d', sequence, packet_size)
+                        self.log.debug('send: block %d, pks: %d',
+                                       sequence, packet_size)
                         self.ser.write(header + data + checksum)
                     elif in_waiting == 0:
-                        self.log.debug('re-send: block %d, pks: %d', sequence, packet_size)
+                        self.log.debug(
+                            're-send: block %d, pks: %d', sequence, packet_size)
                         self.ser.write(header + data + checksum)
                     elif in_waiting > 1:
                         rubbish = self.ser.read(in_waiting-1)
-                        self.log.info('got rubbish %r for block %d', rubbish, sequence)
+                        self.log.info(
+                            'got rubbish %r for block %d', rubbish, sequence)
                     continue
                 if char == ACK or char == ACK2 or (char == NAK and not slow_mode):
                     success_count += 1
                     if callable(callback):
-                        callback(total_packets, success_count, error_count, total)
+                        callback(total_packets, success_count,
+                                 error_count, total)
                     error_count = 0
                     nak_count = 0
                     if char == NAK:
                         rubbish = self.ser.read(1024)
-                        self.log.info('got NAK rubbish %r for block %d', rubbish, sequence)
+                        self.log.info(
+                            'got NAK rubbish %r for block %d', rubbish, sequence)
                         rubbish = self.ser.read(1024)
-                        self.log.info('got NAK rubbish %r for block %d', rubbish, sequence)
+                        self.log.info(
+                            'got NAK rubbish %r for block %d', rubbish, sequence)
                         rubbish = self.ser.read(1024)
-                        self.log.info('got NAK rubbish %r for block %d', rubbish, sequence)
+                        self.log.info(
+                            'got NAK rubbish %r for block %d', rubbish, sequence)
                         rubbish = self.ser.read(1024)
-                        self.log.info('got NAK rubbish %r for block %d', rubbish, sequence)
+                        self.log.info(
+                            'got NAK rubbish %r for block %d', rubbish, sequence)
                     break
                 if slow_mode and char == NAK:
                     nak_count += 1
                     error_count += 1
-                    self.log.error('send error: expected CRC|ACK; got NAK(%d) for block %d', nak_count, sequence)
+                    self.log.error(
+                        'send error: expected CRC|ACK; got NAK(%d) for block %d', nak_count, sequence)
                     if nak_count > 4:
                         nak_count = 0
                         self.log.debug('try sending next block: %d', sequence)
@@ -346,7 +364,7 @@ class YMODEM(object):
                     return False
 
                 self.log.info('send error: expected CRC|ACK; got %r for block %d',
-                               char, sequence)
+                              char, sequence)
                 error_count += 1
                 if callable(callback):
                     callback(total_packets, success_count, error_count, total)
@@ -354,7 +372,7 @@ class YMODEM(object):
                     # excessive amounts of retransmissions requested,
                     # abort transfer
                     self.log.info('send error: Unexpected received %d times, '
-                                   'aborting.', error_count)
+                                  'aborting.', error_count)
                     self.abort(timeout=timeout)
                     return False
 
@@ -418,6 +436,3 @@ class YMODEM(object):
             crctbl_idx = ((crc >> 8) ^ char) & 0xff
             crc = ((crc << 8) ^ self.crctable[crctbl_idx]) & 0xffff
         return crc & 0xffff
-
-
-

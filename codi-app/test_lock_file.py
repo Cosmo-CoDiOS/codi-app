@@ -15,17 +15,17 @@ print("Should be False:", killed)
 
 pid = os.fork()
 if pid == 0:
-    #lock and keep spinning forever
+    # lock and keep spinning forever
     lock_file.lock(lock)
     while True:
         time.sleep(100)
-print("Child running PID:",pid)
+print("Child running PID:", pid)
 time.sleep(0.1)
 killed = lock_file.check_and_kill(lock)
 print("Should be True:", killed)
 
 # Create stale lock file
-pidfd = os.open(lock, os.O_CREAT|os.O_WRONLY|os.O_EXCL)
+pidfd = os.open(lock, os.O_CREAT | os.O_WRONLY | os.O_EXCL)
 os.write(pidfd, "123456789".encode())
 os.close(pidfd)
 

@@ -11,6 +11,7 @@ def addressbookChanged(par1, par2, par3, par4, par5):
     mtkCmd.MTKDataChangeAlert(1, 0)
     mtkCmd.MTKDataChangeAlert(0, 0)
 
+
 def init(startMainLoop=True):
     global bus
     global session
@@ -23,7 +24,8 @@ def init(startMainLoop=True):
     # bus.subscribe(signal_fired=print)
     power = bus.get('.UPower')
     power.onPropertiesChanged = PropertyManager.propertiesChanged
-    power = bus.get('.UPower', '/org/freedesktop/UPower/devices/battery_battery')
+    power = bus.get(
+        '.UPower', '/org/freedesktop/UPower/devices/battery_battery')
     power.onPropertiesChanged = PropertyManager.propertiesChanged
     LEDManager.ledsCharging(power.State == 1)
 
@@ -41,7 +43,8 @@ def init(startMainLoop=True):
     PropertyManager.init()
 
     session = SessionBus()
-    session.subscribe(object='/com/canonical/pim/AddressBook', signal_fired=addressbookChanged)
+    session.subscribe(object='/com/canonical/pim/AddressBook',
+                      signal_fired=addressbookChanged)
 
     # help(ril0)
     # ril0['org.ofono.CallVolume'].onPropertyChanged = propertyChanged

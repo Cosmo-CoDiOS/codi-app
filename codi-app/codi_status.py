@@ -6,9 +6,11 @@ class CallInfoClass:
     currentCall = None
     state = 'disconnected'
 
+
 class DeviceInfoClass:
     batteryLevel = 0
     lidClosed = True
+
 
 def init():
     global DeviceInfo

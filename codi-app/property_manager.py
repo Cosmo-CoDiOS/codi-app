@@ -9,6 +9,7 @@ import Addressbook
 
 log = logging.getLogger('codi')
 
+
 def init():
     global CallInfo
     global DeviceInfo
@@ -36,6 +37,7 @@ def volumeButtonPressed(sender, name, value):
         else:
             mtkCmd.KeyPressInfo(24, value, 0)
 
+
 def propertiesChanged(sender, property, data):
     log.info('<= %r %r %r', sender, property, data)
     if 'LidIsClosed' in property.keys():
@@ -58,9 +60,11 @@ def propertiesChanged(sender, property, data):
         cf.GetBatteryLevel()
         LEDManager.ledsCharging(DBusServer.power.State == 1)
 
+
 def networkPropertiesChanged(properties):
     log.info('<= %r', properties)
     mtkCmd.WiFiStatusInfo(int(DBusServer.network.WirelessEnabled), 100)
+
 
 def propertyChanged(property, value):
     log.info('<=', property, value)
@@ -70,9 +74,11 @@ def propertyChanged(property, value):
     if property == 'State':
         CallInfo.state = value
         if value == 'active':
-            mtkCmd.CallInfo(CallInfo.modemId, 2, '0', CallInfo.contactName, CallInfo.msisdn, 0)
+            mtkCmd.CallInfo(CallInfo.modemId, 2, '0',
+                            CallInfo.contactName, CallInfo.msisdn, 0)
         if value == 'disconnected':
-            mtkCmd.CallInfo(CallInfo.modemId, 0, '0', CallInfo.contactName, CallInfo.msisdn, 0)
+            mtkCmd.CallInfo(CallInfo.modemId, 0, '0',
+                            CallInfo.contactName, CallInfo.msisdn, 0)
             mtkCmd.MTKDataChangeAlert(1, 0)
             if DeviceInfo.lidClosed:
                 LEDManager.ledsBlue()
@@ -94,9 +100,12 @@ def callStatusChanged(sender, data=None):
             CallInfo.contactName = data['Name']
             CallInfo.msisdn = data['LineIdentification']
             if CallInfo.contactName == '':
-                CallInfo.contactName = Addressbook.contactNameForNumber(CallInfo.msisdn)
+                CallInfo.contactName = Addressbook.contactNameForNumber(
+                    CallInfo.msisdn)
             LEDManager.ledsIncomingCall()
             if data['State'] == 'incoming':
-                mtkCmd.CallInfo(CallInfo.modemId, 1, '0', CallInfo.contactName, CallInfo.msisdn, 0)
+                mtkCmd.CallInfo(CallInfo.modemId, 1, '0',
+                                CallInfo.contactName, CallInfo.msisdn, 0)
             else:
-                mtkCmd.CallInfo(CallInfo.modemId, 13, '0', CallInfo.contactName, CallInfo.msisdn, 0)
+                mtkCmd.CallInfo(CallInfo.modemId, 13, '0',
+                                CallInfo.contactName, CallInfo.msisdn, 0)

@@ -18,64 +18,82 @@ protocol_major = None
 protocol_minor = None
 log = logging.getLogger('codi')
 
+
 def get_codi_version():
     global codi_version
     return codi_version
+
 
 def get_resources_version():
     global resources_version
     return resources_version
 
+
 def get_protocol_major():
     global protocol_major
     return protocol_major
+
 
 def get_protocol_minor():
     global protocol_minor
     return protocol_minor
 
+
 def datetime_from_utc_to_local(utc_datetime):
     now_timestamp = time.time()
-    offset = datetime.fromtimestamp(now_timestamp) - datetime.utcfromtimestamp(now_timestamp)
+    offset = datetime.fromtimestamp(
+        now_timestamp) - datetime.utcfromtimestamp(now_timestamp)
     # print(type(offset))
     return utc_datetime + offset
 
 # ST32 calls these functions
 
+
 def GetBatteryLevel():
     mtkCmd.BatteryLevelInfo(CodiStatus.DeviceInfo.batteryLevel)
+
 
 def GetDoNotDisturbStatus():
     mtkCmd.DoNotDisturbStatusInfo(0)
 
+
 def GetBTStatus():
     mtkCmd.BTStatusInfo(0)
 
+
 def GetWiFiStatus():
     mtkCmd.WiFiStatusInfo(1, 100)
+
 
 def GetLockStatus():
     # UNLOCKED        0
     # LOCK_PASSWORD   4
     mtkCmd.LockStatusInfo(0, 4, '')
 
+
 def GetLocationStatus():
     mtkCmd.LocationStatusInfo(0)
+
 
 def GetFlightModeStatus():
     mtkCmd.FlightModeStatusInfo(0)
 
+
 def GetHotspotStatus():
     mtkCmd.HotspotStatusInfo(0)
+
 
 def GetVolumeLevel():
     mtkCmd.VolumeLevelInfo(50)
 
+
 def GetBatterySaverStatus():
     mtkCmd.BatterySaverStatusInfo(0)
 
+
 def GetMobileDataStatus():
     mtkCmd.MobileDataStatusInfo(1)
+
 
 def GetModemSignalInfo():
     # sim1, sim2, sim2type
@@ -84,15 +102,17 @@ def GetModemSignalInfo():
 # def SetLock(status):
 #     LEDManager.ledsBlue()
 
+
 def GetDateTime():
     now = datetime.now()
     mtkCmd.DateTimeInfo(int(now.strftime('%d')),
-    int(now.strftime('%m'))-1,
-        int(now.strftime('%Y')),
-        int(now.strftime('%H')),
-        int(now.strftime('%M')),
-        int(now.strftime('%S')),
-        0)
+                        int(now.strftime('%m'))-1,
+                        int(now.strftime('%Y')),
+                        int(now.strftime('%H')),
+                        int(now.strftime('%M')),
+                        int(now.strftime('%S')),
+                        0)
+
 
 def ActionCall(action, sim, line, numtype, msisdn, contact, contact_id):
     try:
@@ -102,14 +122,15 @@ def ActionCall(action, sim, line, numtype, msisdn, contact, contact_id):
             if sim == 2:
                 ril = DBusServer.ril1
             ril.Dial(msisdn, '')
-            conn = sqlite3.connect('/home/'+getpass.getuser()+'/.local/share/history-service/history.sqlite')
+            conn = sqlite3.connect(
+                '/home/'+getpass.getuser()+'/.local/share/history-service/history.sqlite')
             try:
                 c = conn.cursor()
                 statement = 'insert into voice_events values ("ofono/ofono/ril_0", "' + msisdn + \
-                        '", "' + msisdn + datetime.now().strftime(':%a %b %d %H:%M:%S %Y') + \
-                        '", "self", "' + \
-                        datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z') + \
-                        '", 0, 4, 0, "' + msisdn + '")'
+                    '", "' + msisdn + datetime.now().strftime(':%a %b %d %H:%M:%S %Y') + \
+                    '", "self", "' + \
+                    datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.000Z') + \
+                    '", 0, 4, 0, "' + msisdn + '")'
                 # log.info(statement)
                 c.execute(statement)
                 conn.commit()
@@ -126,10 +147,10 @@ def ActionCall(action, sim, line, numtype, msisdn, contact, contact_id):
         log.error(e)
 
 
-
 def SetCallMuteStatus(status):
     try:
-        DBusServer.ril0['org.ofono.CallVolume'].SetProperty('Muted', GLib.Variant(value=status, format_string='b'))
+        DBusServer.ril0['org.ofono.CallVolume'].SetProperty(
+            'Muted', GLib.Variant(value=status, format_string='b'))
     except Exception as e:
         log.error(e)
 
@@ -142,13 +163,15 @@ def SendDTMF(sim, line, asciinum, palyit):
         # DBusServer.ril0['org.ofono.VoiceCallManager'].SendTones('1*2')
 
         if asciinum < 10:
-            DBusServer.ril0['org.ofono.VoiceCallManager'].SendTones(str(asciinum))
+            DBusServer.ril0['org.ofono.VoiceCallManager'].SendTones(
+                str(asciinum))
         elif asciinum == 42:
             DBusServer.ril0['org.ofono.VoiceCallManager'].SendTones('*')
         elif asciinum == 35:
             DBusServer.ril0['org.ofono.VoiceCallManager'].SendTones('#')
     except Exception as e:
         log.error(e)
+
 
 def SetCallOutput(status):
     try:
@@ -159,6 +182,7 @@ def SetCallOutput(status):
     except Exception as e:
         log.error(e)
 
+
 def Restart(restartMode):
     try:
         if restartMode == 0:
@@ -166,15 +190,18 @@ def Restart(restartMode):
             LEDManager.ledsOff()
             CodiStatus.DeviceInfo.lidClosed = False
             mtkCmd.SetCoDiStatus(3, 3, 3)
-            os.system('qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 -1')
+            os.system(
+                'qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 2 -1')
         if restartMode == 1:
             mtkCmd.SetMouse(0, 1)
             CodiStatus.DeviceInfo.lidClosed = False
             LEDManager.ledsOff()
             mtkCmd.SetCoDiStatus(3, 3, 3)
-            os.system('qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 1 -1')
+            os.system(
+                'qdbus org.kde.ksmserver /KSMServer org.kde.KSMServerInterface.logout 0 1 -1')
     except Exception as e:
         log.error(e)
+
 
 def CoDiFlashVersionInfo(version):
     global codi_version
@@ -185,12 +212,14 @@ def CoDiFlashVersionInfo(version):
         codi_version = parts[1].decode("utf-8")
         resources_version = parts[2].decode("utf-8")
 
+
 def ProtocolVersionInfo(majorVer, minVer):
     global protocol_major
     global protocol_minor
 
     protocol_major = majorVer
     protocol_minor = minVer
+
 
 def CoDiOFF(par1, par2):
     if CodiStatus.CallInfo.state == 'disconnected':
@@ -200,19 +229,23 @@ def CoDiOFF(par1, par2):
             else:
                 LEDManager.ledsOff()
 
+
 def GetCallHistory(index):
     batchSize = 10
-    conn = sqlite3.connect('/home/'+getpass.getuser()+'/.local/share/history-service/history.sqlite')
+    conn = sqlite3.connect('/home/'+getpass.getuser() +
+                           '/.local/share/history-service/history.sqlite')
     try:
         c = conn.cursor()
-        totalCdr = c.execute('select count(*) from voice_events').fetchall()[0][0]
+        totalCdr = c.execute(
+            'select count(*) from voice_events').fetchall()[0][0]
     except Exception as e:
         log.error("Exception: %r", e)
         totalCdr = 0
 
     try:
         c = conn.cursor()
-        history = c.execute('select * from voice_events order by timestamp desc limit ' + str(batchSize) + ' offset ' + str(index)).fetchall()
+        history = c.execute('select * from voice_events order by timestamp desc limit ' +
+                            str(batchSize) + ' offset ' + str(index)).fetchall()
         for i in range(len(history)):
             tod = history[i][4]
             state = 1
@@ -221,11 +254,13 @@ def GetCallHistory(index):
             if history[i][3] == 'self':
                 state = 2
             try:
-                dt = datetime.strptime(history[i][4][0:19], '%Y-%m-%dT%H:%M:%S')
+                dt = datetime.strptime(
+                    history[i][4][0:19], '%Y-%m-%dT%H:%M:%S')
                 dt = datetime_from_utc_to_local(dt)
                 # log.info(history[i])
                 # log.info(i, totalCdr, batchSize, history[i][1], history[i][1], dt.day, dt.month, dt.year, dt.hour, dt.minute, dt.second, 0, state)
-                mtkCmd.CallHistoryInfo(i, totalCdr, batchSize, Addressbook.contactNameForNumber(history[i][1]), history[i][1], dt.day, dt.month, dt.year, dt.hour, dt.minute, dt.second, 0, state)
+                mtkCmd.CallHistoryInfo(i, totalCdr, batchSize, Addressbook.contactNameForNumber(
+                    history[i][1]), history[i][1], dt.day, dt.month, dt.year, dt.hour, dt.minute, dt.second, 0, state)
             except Exception as e:
                 log.error("Exception: %r", e)
     except Exception as e:
@@ -233,6 +268,7 @@ def GetCallHistory(index):
 
     c.close()
     conn.close()
+
 
 def GetContacts(index):
     Addressbook.refreshContacts()
@@ -248,15 +284,17 @@ def GetContacts(index):
     for c in CodiStatus.Contacts[index:index+batch]:
         mtkCmd.ContactInfo(c[0], len(CodiStatus.Contacts), batch, c[1], c[2])
 
+
 tapHistory = False
+
 
 def MouseInfo(mode, x_coord, y_coord):
     global tapHistory
 
     if tapHistory and mode == 2:
-            os.system('xdotool click 1')
-            tapHistory = False
-            return
+        os.system('xdotool click 1')
+        tapHistory = False
+        return
 
     if mode == 3:
         tapHistory = True
@@ -290,7 +328,6 @@ def MouseInfo(mode, x_coord, y_coord):
 
     x = str(-y_coord).replace('-', '\\-')
     y = str(-x_coord).replace('-', '\\-')
-
 
     if mode == 0:
         os.system('xdotool mousemove -- ' + x + ' ' + y)

@@ -6,14 +6,17 @@ import PropertyManager
 
 dev = None
 
+
 def readEvent():
     global dev
     for event in dev.read_loop():
         # print(event)
         if event.code == 115:
-            PropertyManager.volumeButtonPressed('EventListener', 'increase_volume', event.value)
+            PropertyManager.volumeButtonPressed(
+                'EventListener', 'increase_volume', event.value)
         if event.code == 114:
-            PropertyManager.volumeButtonPressed('EventListener', 'decrease_volume', event.value)
+            PropertyManager.volumeButtonPressed(
+                'EventListener', 'decrease_volume', event.value)
 
 
 def init():

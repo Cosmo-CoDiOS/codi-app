@@ -19,10 +19,12 @@ import EventListener
 import Addressbook
 import lock_file
 
+
 def signalHandler(_signo, _stack_frame):
     # mtkCmd.SetMouse(0, 1)
     mtkCmd.SetCoDiStatus(3, 3, 3)
     sys.exit(0)
+
 
 signal.signal(signal.SIGINT, signalHandler)
 signal.signal(signal.SIGTERM, signalHandler)
@@ -38,6 +40,7 @@ lock_file.lock(lock)
 
 CodiStatus.init()
 
+
 def initCodi():
     Addressbook.get_contacts_from_dbus()
     mtkCmd.SetCoDiStatus(1, 7, 1)
@@ -51,6 +54,7 @@ def initCodi():
     mtkCmd.MTKDataChangeAlert(1, 0)
     mtkCmd.MTKDataChangeAlert(0, 0)
     cf.SetCallOutput(0)
+
 
 SerialPortManager.init()
 
@@ -83,4 +87,3 @@ EventListener.init()
 initCodi()
 
 DBusServer.init()
-

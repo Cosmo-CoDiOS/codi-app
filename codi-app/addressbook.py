@@ -5,6 +5,7 @@ import logging
 
 log = logging.getLogger('codi')
 
+
 def contactNameForNumber(number):
     for c in CodiStatus.Contacts:
         if c[2] == number:
@@ -16,7 +17,8 @@ def refreshContacts():
     CodiStatus.Contacts = []
 
     try:
-        conn = sqlite3.connect('/home/'+getpass.getuser()+'/.local/share/evolution/addressbook/system/contacts.db')
+        conn = sqlite3.connect(
+            '/home/'+getpass.getuser()+'/.local/share/evolution/addressbook/system/contacts.db')
         c = conn.cursor()
         statement = 'select * from folder_id'
         contacts = c.execute(statement)

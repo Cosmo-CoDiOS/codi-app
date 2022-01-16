@@ -11,6 +11,7 @@ socket = None
 thread = None
 lock = threading.Lock()
 
+
 def init():
     global socket
     global thread
@@ -21,6 +22,7 @@ def init():
         thread.start()
     except Exception as e:
         log.error(e)
+
 
 def stop():
     global isRunning
@@ -139,4 +141,3 @@ def switchToCmdMode():
         thread.start()
     except Exception as e:
         log.error(e)
-

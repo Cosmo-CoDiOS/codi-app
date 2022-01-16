@@ -2,23 +2,30 @@ import struct
 import logging
 import CodiFunctions as cf
 
+
 def readUint8(p):
     return struct.unpack(">B", p[:1])[0], p[1:]
+
 
 def readUint16(p):
     return struct.unpack(">H", p[:2])[0], p[2:]
 
+
 def readUint32(p):
     return struct.unpack(">I", p[:4])[0], p[4:]
+
 
 def readInt8(p):
     return struct.unpack(">b", p[:1])[0], p[1:]
 
+
 def readInt16(p):
     return struct.unpack(">h", p[:2])[0], p[2:]
 
+
 def readInt32(p):
     return struct.unpack(">i", p[:4])[0], p[4:]
+
 
 def readString(p):
     s, np = readUint32(p)
@@ -28,11 +35,14 @@ def readString(p):
         log.error('Error reading string %r%r%r', s, '>', len(np))
         return '', p
 
+
 def readUTF8String(p):
     return readString(p)
 
+
 def readBlob(p):
     return readString(p)
+
 
 CMD_MTK_GET_PROTOCOL_VERSION = 0
 CMD_MTK_GET_CODI_FLASH_VERSION = 1
@@ -169,6 +179,7 @@ CMD_SYNC_RIGHT_USB_OTG_STATUS = 144
 CMD_ST_ENTRY_DEEP_SLEEP_STATUS = 145
 
 log = logging.getLogger('codi')
+
 
 def readMessage(msg):
     cmdId, msg = readUint32(msg)
@@ -552,7 +563,8 @@ def readMessage(msg):
             log.info("msisdn = %r", msisdn)
             log.info("contact = %r", contact)
             log.info("contact_id = %r", contact_id)
-            cf.ActionCall(action, sim, line, numtype, msisdn, contact, contact_id)
+            cf.ActionCall(action, sim, line, numtype,
+                          msisdn, contact, contact_id)
         except Exception as e:
             log.error(e)
 
