@@ -1,7 +1,11 @@
+import logging
 import os
 import time
 
 import psutil
+
+log = logging.getLogger("codi-app ({})".format(__name__))
+log.setLevel(logging.DEBUG)
 
 
 def check_and_kill(file):
@@ -14,7 +18,8 @@ def check_and_kill(file):
     except Exception as e:
         return False
 
-    print("Killing PID:", pid)
+    log.info("Shutting down `codi-app` related processes..")
+    log.debug("PID: {}".format(pid))
     count = 0
     while pid > 0 and psutil.pid_exists(pid):
         try:
@@ -23,9 +28,12 @@ def check_and_kill(file):
                 os.waitpid(pid, 0)
             count = count + 1
             time.sleep(1)
+            log.debug("Killed PID: {}".format(pid))
             print("killed", count)
         except OSError:
-            print("can't deliver signal", count, "to", pid)
+            log.error(
+                "Couldn't deliver signal (count: {}), to PID: {}".format(count, pid)
+            )
             pid = 0
     os.remove(file)
     return count > 0
@@ -38,5 +46,5 @@ def lock(file):
 
 
 def remove(file):
-    print("removed pidfile %s" % file)
+    log.debug("Removed pidfile: {}".format(file))
     os.remove(file)

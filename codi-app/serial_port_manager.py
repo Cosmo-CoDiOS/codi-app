@@ -7,7 +7,7 @@ import serial
 
 import codi_st32_generated_functions as stm23_cmd
 
-log = logging.getLogger("codi")
+log = logging.getLogger("codi-app: ({})".format(__name__))
 isRunning = True
 socket = None
 thread = None

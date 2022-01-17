@@ -1,11 +1,13 @@
 import threading
-
+import logging
 import evdev
 from evdev import InputDevice
 
 import property_manager
 
 dev = None
+
+log = logging.getLogger("codi-app: ({})".format(__name__))
 
 
 def readEvent():

@@ -188,7 +188,7 @@ CMD_SYNC_SYS_SLEEP_STATUS = 143
 CMD_SYNC_RIGHT_USB_OTG_STATUS = 144
 CMD_ST_ENTRY_DEEP_SLEEP_STATUS = 145
 
-log = logging.getLogger("codi")
+log = logging.getLogger("codi-app: ({})".format(__name__))
 
 
 def GetFlashVersion():

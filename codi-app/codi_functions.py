@@ -18,7 +18,7 @@ codi_version = None
 resources_version = None
 protocol_major = None
 protocol_minor = None
-log = logging.getLogger("codi")
+log = logging.getLogger("codi-app: ({})".format(__name__))
 
 
 def get_codi_version():

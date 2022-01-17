@@ -4,7 +4,9 @@ class CallInfoClass:
     msisdn = ""
     currentCall = None
     state = "disconnected"
+import logging
 
+log = logging.getLogger("codi-app: ({})".format(__name__))
 
 class DeviceInfoClass:
     batteryLevel = 0

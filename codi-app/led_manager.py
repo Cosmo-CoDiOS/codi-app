@@ -5,6 +5,10 @@
 4 - Keyboard backlight
 """
 
+import logging
+
+log = logging.getLogger("codi-app: ({})".format(__name__))
+
 
 def set_leds(leds):
     for l in leds.keys():

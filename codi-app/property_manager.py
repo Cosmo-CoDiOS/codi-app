@@ -7,7 +7,7 @@ import codi_status
 import dbus_server
 import led_manager
 
-log = logging.getLogger("codi")
+log = logging.getLogger("codi-app: ({})".format(__name__))
 
 
 def init():

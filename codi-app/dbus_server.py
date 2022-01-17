@@ -1,9 +1,11 @@
 from gi.repository import GLib
 from pydbus import SystemBus, SessionBus
-
+import logging
 import codi_mtk_generated_functions as mtk_cmd
 import led_manager
 import property_manager
+
+log = logging.getLogger("codi-app: ({})".format(__name__))
 
 
 def addressbookChanged(par1, par2, par3, par4, par5):

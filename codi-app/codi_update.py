@@ -13,7 +13,7 @@ import lock_file
 import serial_port_manager
 from xmodem import YMODEM
 
-log = logging.getLogger("codiUpdate")
+log = logging.getLogger("codi-app: ({})".format(__name__))
 
 ospi_url = None
 resources_url = None

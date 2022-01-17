@@ -14,8 +14,8 @@ import lock_file
 import serial_port_manager
 from codi_generated_parser import *
 
-log = logging.getLogger("codi-app ({})".format(__name__))
-log.setLevel(logging.DEBUG)
+log = logging.getLogger("codi-app")
+logging.basicConfig(level=logging.DEBUG)
 
 
 def signalHandler(_signo, _stack_frame):
@@ -33,10 +33,6 @@ lock = "/tmp/.codi.lock"
 lock_file.check_and_kill(lock)
 lock_file.lock(lock)
 
-# To turn on console logging uncomment the following line
-# logging.basicConfig(level=logging.DEBUG)
-
-log.info("Initializing...")
 codi_status.init()
 
 
