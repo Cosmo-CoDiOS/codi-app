@@ -8,7 +8,7 @@ import urllib.request
 from distutils.version import LooseVersion
 
 import codi_functions as cf
-import codi_st32_generated_functions as stm23_cmd
+import codi_stm32_generated_functions as stm32_cmd
 import lock_file
 import serial_port_manager
 from xmodem import YMODEM
@@ -53,8 +53,8 @@ def check_new_fota_versions_available():
     global resources_url
 
     time.sleep(1)  # Wait for listening thread to get started
-    sendMessage(stm23_cmd.CMD_MTK_GET_CODI_FLASH_VERSION)
-    sendMessage(stm23_cmd.CMD_MTK_GET_PROTOCOL_VERSION)
+    sendMessage(stm32_cmd.CMD_MTK_GET_CODI_FLASH_VERSION)
+    sendMessage(stm32_cmd.CMD_MTK_GET_PROTOCOL_VERSION)
     # download available versions - https://fota.planetcom.co.uk/stm32flash/cosmo_stm32_firmware_versions.txt
     resource_version = {}
     newest_version = None

@@ -5,7 +5,7 @@ import time
 
 import serial
 
-import codi_st32_generated_functions as stm23_cmd
+import codi_stm32_generated_functions as stm32_cmd
 
 log = logging.getLogger("codi-app: ({})".format(__name__))
 isRunning = True
@@ -69,7 +69,7 @@ def readFromSerial():
             # print('[115200]Found message size', msgSize)
             if msgSize <= 300 and isRunning:
                 msg = socket.read(msgSize - 8)
-                stm23_cmd.readMessage(msg)
+                stm32_cmd.readMessage(msg)
             else:
                 if isRunning:
                     log.error("[115200]Message length wrong, ignoring msg")
