@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-import lock_file
 import os
 import time
+
+import lock_file
 
 lock = "/tmp/test.lock"
 try:

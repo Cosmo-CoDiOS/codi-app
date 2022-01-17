@@ -1,10 +1,9 @@
-
 class CallInfoClass:
     modemId = 0
-    contactName = ''
-    msisdn = ''
+    contactName = ""
+    msisdn = ""
     currentCall = None
-    state = 'disconnected'
+    state = "disconnected"
 
 
 class DeviceInfoClass:
@@ -22,7 +21,7 @@ def init():
     Contacts = []
 
     try:
-        with open('/proc/battery_status') as f:
-            DeviceInfo.batteryLevel = int(f.read().split(',')[1])
+        with open("/proc/battery_status") as f:
+            DeviceInfo.batteryLevel = int(f.read().split(",")[1])
     except Exception as e:
         print(e)

@@ -1,12 +1,13 @@
 import os
 import time
+
 import psutil
 
 
 def check_and_kill(file):
     pid = None
     try:
-        f = open(file, 'r')
+        f = open(file, "r")
         pidstr = f.read()
         f.close()
         pid = int(pidstr)
@@ -37,5 +38,5 @@ def lock(file):
 
 
 def remove(file):
-    print('removed pidfile %s' % file)
+    print("removed pidfile %s" % file)
     os.remove(file)

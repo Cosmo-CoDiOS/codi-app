@@ -1,6 +1,7 @@
-import struct
-import SerialPortManager
 import logging
+import struct
+
+import serial_port_manager
 
 
 def writeUint8(p):
@@ -40,9 +41,9 @@ def writeBlob(b):
 
 
 def sendMessage(commandId, args=[]):
-    msgHeader = bytes.fromhex('58 21 58 21')
+    msgHeader = bytes.fromhex("58 21 58 21")
     cmdId = writeUint32(commandId)
-    cmdSessionId = bytes.fromhex('00 00 00 01')
+    cmdSessionId = bytes.fromhex("00 00 00 01")
     msgLength = len(msgHeader) + 4 + len(cmdId) + len(cmdSessionId)
     for i in args:
         msgLength += len(i)
@@ -50,7 +51,7 @@ def sendMessage(commandId, args=[]):
     cmd = msgHeader + writeUint32(msgLength) + cmdId + cmdSessionId
     for i in args:
         cmd += i
-    SerialPortManager.sendCommand(list(cmd))
+    serial_port_manager.sendCommand(list(cmd))
 
 
 CMD_MTK_GET_PROTOCOL_VERSION = 0
@@ -187,7 +188,7 @@ CMD_SYNC_SYS_SLEEP_STATUS = 143
 CMD_SYNC_RIGHT_USB_OTG_STATUS = 144
 CMD_ST_ENTRY_DEEP_SLEEP_STATUS = 145
 
-log = logging.getLogger('codi')
+log = logging.getLogger("codi")
 
 
 def GetFlashVersion():
@@ -197,8 +198,18 @@ def GetFlashVersion():
 
 def DateTimeInfo(day, month, year, hour, minute, second, tz):
     log.info("-> DateTimeInfo")
-    sendMessage(CMD_MTK_INFO_DATETIME, [writeUint32(day), writeUint32(month), writeUint32(
-        year), writeUint32(hour), writeUint32(minute), writeUint32(second), writeUint32(tz)])
+    sendMessage(
+        CMD_MTK_INFO_DATETIME,
+        [
+            writeUint32(day),
+            writeUint32(month),
+            writeUint32(year),
+            writeUint32(hour),
+            writeUint32(minute),
+            writeUint32(second),
+            writeUint32(tz),
+        ],
+    )
 
 
 def LocationStatusInfo(status):
@@ -218,8 +229,7 @@ def CoverStatusInfo(status):
 
 def WiFiStatusInfo(status, signalval):
     log.info("-> WiFiStatusInfo")
-    sendMessage(CMD_MTK_INFO_WIFI_STATUS, [
-                writeUint16(status), writeUint32(signalval)])
+    sendMessage(CMD_MTK_INFO_WIFI_STATUS, [writeUint16(status), writeUint32(signalval)])
 
 
 def BTStatusInfo(status):
@@ -254,8 +264,7 @@ def DoNotDisturbStatusInfo(status):
 
 def VolumeLevelInfo(status, stream):
     log.info("-> VolumeLevelInfo")
-    sendMessage(CMD_MTK_INFO_VOLUME_LEVEL, [
-                writeUint16(status), writeUint16(stream)])
+    sendMessage(CMD_MTK_INFO_VOLUME_LEVEL, [writeUint16(status), writeUint16(stream)])
 
 
 def BatteryLevelInfo(status):
@@ -263,16 +272,20 @@ def BatteryLevelInfo(status):
     sendMessage(CMD_MTK_INFO_BATTERY_LEVEL, [writeUint16(status)])
 
 
-def SetCoDiStatus(mode, screen, data1):
-    log.info("-> SetCoDiStatus")
-    sendMessage(CMD_MTK_SET_CODI_STATUS, [writeUint32(
-        mode), writeUint32(screen), writeUint32(data1)])
+def Setcodi_status(mode, screen, data1):
+    log.info("-> Setcodi_status")
+    sendMessage(
+        CMD_MTK_SET_CODI_STATUS,
+        [writeUint32(mode), writeUint32(screen), writeUint32(data1)],
+    )
 
 
 def LockStatusInfo(locked, method, strdata):
     log.info("-> LockStatusInfo")
-    sendMessage(CMD_MTK_INFO_LOCK_STATUS, [writeUint16(
-        locked), writeUint32(method), writeString(strdata)])
+    sendMessage(
+        CMD_MTK_INFO_LOCK_STATUS,
+        [writeUint16(locked), writeUint32(method), writeString(strdata)],
+    )
 
 
 def CallMuteStatusInfo(status):
@@ -287,8 +300,7 @@ def CallOutputInfo(output):
 
 def CallOutputOptionsInfo(output_options):
     log.info("-> CallOutputOptionsInfo")
-    sendMessage(CMD_MTK_INFO_CALL_OUTPUT_OPTIONS,
-                [writeUint32(output_options)])
+    sendMessage(CMD_MTK_INFO_CALL_OUTPUT_OPTIONS, [writeUint32(output_options)])
 
 
 def CameraStatusInfo(status):
@@ -298,8 +310,9 @@ def CameraStatusInfo(status):
 
 def CameraSettingsInfo(parameter, value):
     log.info("-> CameraSettingsInfo")
-    sendMessage(CMD_MTK_INFO_CAMERA_SETTINGS, [
-                writeUint32(parameter), writeUint32(value)])
+    sendMessage(
+        CMD_MTK_INFO_CAMERA_SETTINGS, [writeUint32(parameter), writeUint32(value)]
+    )
 
 
 def VideoStatusInfo(status):
@@ -309,8 +322,9 @@ def VideoStatusInfo(status):
 
 def VideoSettingsInfo(parameter, value):
     log.info("-> VideoSettingsInfo")
-    sendMessage(CMD_MTK_INFO_VIDEO_SETTINGS, [
-                writeUint32(parameter), writeUint32(value)])
+    sendMessage(
+        CMD_MTK_INFO_VIDEO_SETTINGS, [writeUint32(parameter), writeUint32(value)]
+    )
 
 
 def CoverLightSensorInfo(value):
@@ -320,8 +334,15 @@ def CoverLightSensorInfo(value):
 
 def LoadLanguageResource(langid, resname, resdata, forcereload):
     log.info("-> LoadLanguageResource")
-    sendMessage(CMD_MTK_LOAD_LANGUAGE_RESOURCE, [writeString(langid), writeString(
-        resname), writeBlob(resdata), writeUint32(forcereload)])
+    sendMessage(
+        CMD_MTK_LOAD_LANGUAGE_RESOURCE,
+        [
+            writeString(langid),
+            writeString(resname),
+            writeBlob(resdata),
+            writeUint32(forcereload),
+        ],
+    )
 
 
 def GetCurrentLanguage():
@@ -336,38 +357,77 @@ def SetCurrentLanguage(langid):
 
 def ShowMedia(typestr, resname, seconds, speed, aftermode):
     log.info("-> ShowMedia")
-    sendMessage(CMD_MTK_SHOW_MEDIA, [writeString(typestr), writeString(
-        resname), writeUint32(seconds), writeUint32(speed), writeUint32(aftermode)])
+    sendMessage(
+        CMD_MTK_SHOW_MEDIA,
+        [
+            writeString(typestr),
+            writeString(resname),
+            writeUint32(seconds),
+            writeUint32(speed),
+            writeUint32(aftermode),
+        ],
+    )
 
 
 def StopMedia(typestr, resname, aftermode):
     log.info("-> StopMedia")
-    sendMessage(CMD_MTK_STOP_MEDIA, [writeString(
-        typestr), writeString(resname), writeUint32(aftermode)])
+    sendMessage(
+        CMD_MTK_STOP_MEDIA,
+        [writeString(typestr), writeString(resname), writeUint32(aftermode)],
+    )
 
 
 def LoadMedia(typestr, resname, resdata, loadmode):
     log.info("-> LoadMedia")
-    sendMessage(CMD_MTK_LOAD_MEDIA, [writeString(typestr), writeString(
-        resname), writeBlob(resdata), writeUint32(loadmode)])
+    sendMessage(
+        CMD_MTK_LOAD_MEDIA,
+        [
+            writeString(typestr),
+            writeString(resname),
+            writeBlob(resdata),
+            writeUint32(loadmode),
+        ],
+    )
 
 
 def UnloadMedia(typestr, resname):
     log.info("-> UnloadMedia")
-    sendMessage(CMD_MTK_UNLOAD_MEDIA, [
-                writeString(typestr), writeString(resname)])
+    sendMessage(CMD_MTK_UNLOAD_MEDIA, [writeString(typestr), writeString(resname)])
 
 
 def HasMedia(typestr, resname):
     log.info("-> HasMedia")
-    sendMessage(CMD_MTK_HAS_MEDIA, [
-                writeString(typestr), writeString(resname)])
+    sendMessage(CMD_MTK_HAS_MEDIA, [writeString(typestr), writeString(resname)])
 
 
-def ShowAlert(alertmode, alertype, alerticondata, typestr, resname, seconds, speed, aftermode, option1, option2):
+def ShowAlert(
+    alertmode,
+    alertype,
+    alerticondata,
+    typestr,
+    resname,
+    seconds,
+    speed,
+    aftermode,
+    option1,
+    option2,
+):
     log.info("-> ShowAlert")
-    sendMessage(CMD_MTK_SHOW_ALERT, [writeUint32(alertmode), writeUint32(alertype), writeBlob(alerticondata), writeString(typestr), writeString(
-        resname), writeUint32(seconds), writeUint32(speed), writeUint32(aftermode), writeUTF8String(option1), writeUTF8String(option2)])
+    sendMessage(
+        CMD_MTK_SHOW_ALERT,
+        [
+            writeUint32(alertmode),
+            writeUint32(alertype),
+            writeBlob(alerticondata),
+            writeString(typestr),
+            writeString(resname),
+            writeUint32(seconds),
+            writeUint32(speed),
+            writeUint32(aftermode),
+            writeUTF8String(option1),
+            writeUTF8String(option2),
+        ],
+    )
 
 
 def StopAlert(aftermode):
@@ -387,44 +447,142 @@ def ActionCoDiHome(screenoff):
 
 def NextAlarmInfo(appid, daystring, timestr):
     log.info("-> NextAlarmInfo")
-    sendMessage(CMD_MTK_INFO_NEXT_ALARM, [writeUint32(
-        appid), writeString(daystring), writeString(timestr)])
+    sendMessage(
+        CMD_MTK_INFO_NEXT_ALARM,
+        [writeUint32(appid), writeString(daystring), writeString(timestr)],
+    )
 
 
 def ShowBatteryLevel(percentage, showforseconds):
     log.info("-> ShowBatteryLevel")
-    sendMessage(CMD_MTK_SHOW_BATTERY_LEVEL, [
-                writeUint32(percentage), writeUint32(showforseconds)])
+    sendMessage(
+        CMD_MTK_SHOW_BATTERY_LEVEL,
+        [writeUint32(percentage), writeUint32(showforseconds)],
+    )
 
 
 def ContactInfo(contactid, totalcontacts, batchsize, contactname, msisdn):
     log.info("-> ContactInfo")
-    sendMessage(CMD_MTK_CONTACT_INFO, [writeString(contactid), writeUint32(
-        totalcontacts), writeUint32(batchsize), writeUTF8String(contactname), writeString(msisdn)])
+    sendMessage(
+        CMD_MTK_CONTACT_INFO,
+        [
+            writeString(contactid),
+            writeUint32(totalcontacts),
+            writeUint32(batchsize),
+            writeUTF8String(contactname),
+            writeString(msisdn),
+        ],
+    )
 
 
-def CallHistoryInfo(cdrid, totalcdr, batchsize, contactname, msisdn, day, month, year, hour, minute, second, tz, state):
+def CallHistoryInfo(
+    cdrid,
+    totalcdr,
+    batchsize,
+    contactname,
+    msisdn,
+    day,
+    month,
+    year,
+    hour,
+    minute,
+    second,
+    tz,
+    state,
+):
     log.info("-> CallHistoryInfo")
-    sendMessage(CMD_MTK_CALL_HISTORY_INFO, [writeUint32(cdrid), writeUint32(totalcdr), writeUint32(batchsize), writeUTF8String(contactname), writeString(
-        msisdn), writeUint32(day), writeUint32(month), writeUint32(year), writeUint32(hour), writeUint32(minute), writeUint32(second), writeUint32(tz), writeUint32(state)])
+    sendMessage(
+        CMD_MTK_CALL_HISTORY_INFO,
+        [
+            writeUint32(cdrid),
+            writeUint32(totalcdr),
+            writeUint32(batchsize),
+            writeUTF8String(contactname),
+            writeString(msisdn),
+            writeUint32(day),
+            writeUint32(month),
+            writeUint32(year),
+            writeUint32(hour),
+            writeUint32(minute),
+            writeUint32(second),
+            writeUint32(tz),
+            writeUint32(state),
+        ],
+    )
 
 
-def NotificationInfo(notid, action, appname, shortinfo, longinfo, day, month, year, hour, minute, second, tz, replyactions, replyaction1, replyaction2, replyaction3):
+def NotificationInfo(
+    notid,
+    action,
+    appname,
+    shortinfo,
+    longinfo,
+    day,
+    month,
+    year,
+    hour,
+    minute,
+    second,
+    tz,
+    replyactions,
+    replyaction1,
+    replyaction2,
+    replyaction3,
+):
     log.info("-> NotificationInfo")
-    sendMessage(CMD_MTK_NOTIFICATION_INFO, [writeUint32(notid), writeUint32(action), writeUTF8String(appname), writeUTF8String(shortinfo), writeUTF8String(longinfo), writeUint32(day), writeUint32(month), writeUint32(
-        year), writeUint32(hour), writeUint32(minute), writeUint32(second), writeUint32(tz), writeUint32(replyactions), writeUTF8String(replyaction1), writeUTF8String(replyaction2), writeUTF8String(replyaction3)])
+    sendMessage(
+        CMD_MTK_NOTIFICATION_INFO,
+        [
+            writeUint32(notid),
+            writeUint32(action),
+            writeUTF8String(appname),
+            writeUTF8String(shortinfo),
+            writeUTF8String(longinfo),
+            writeUint32(day),
+            writeUint32(month),
+            writeUint32(year),
+            writeUint32(hour),
+            writeUint32(minute),
+            writeUint32(second),
+            writeUint32(tz),
+            writeUint32(replyactions),
+            writeUTF8String(replyaction1),
+            writeUTF8String(replyaction2),
+            writeUTF8String(replyaction3),
+        ],
+    )
 
 
 def PlayerInfo(appname, artist, album, track, offset, length, state, imageadr):
     log.info("-> PlayerInfo")
-    sendMessage(CMD_MTK_PLAYER_INFO, [writeUTF8String(appname), writeUTF8String(artist), writeUTF8String(
-        album), writeUTF8String(track), writeUint32(offset), writeUint32(length), writeUint32(state), writeBlob(imageadr)])
+    sendMessage(
+        CMD_MTK_PLAYER_INFO,
+        [
+            writeUTF8String(appname),
+            writeUTF8String(artist),
+            writeUTF8String(album),
+            writeUTF8String(track),
+            writeUint32(offset),
+            writeUint32(length),
+            writeUint32(state),
+            writeBlob(imageadr),
+        ],
+    )
 
 
 def CallInfo(modem, action, contactid, contactname, msisdn, hasicon):
     log.info("-> CallInfo")
-    sendMessage(CMD_MTK_CALL_INFO, [writeUint32(modem), writeUint32(action), writeString(
-        contactid), writeUTF8String(contactname), writeString(msisdn), writeUint32(hasicon)])
+    sendMessage(
+        CMD_MTK_CALL_INFO,
+        [
+            writeUint32(modem),
+            writeUint32(action),
+            writeString(contactid),
+            writeUTF8String(contactname),
+            writeString(msisdn),
+            writeUint32(hasicon),
+        ],
+    )
 
 
 def LEDisonModeInfo(value):
@@ -434,38 +592,60 @@ def LEDisonModeInfo(value):
 
 def LEDisonPatternInfo(animid, animname, animationdata):
     log.info("-> LEDisonPatternInfo")
-    sendMessage(CMD_MTK_LEDISON_PATTERN_INFO, [writeUint32(
-        animid), writeUTF8String(animname), writeBlob(animationdata)])
+    sendMessage(
+        CMD_MTK_LEDISON_PATTERN_INFO,
+        [writeUint32(animid), writeUTF8String(animname), writeBlob(animationdata)],
+    )
 
 
 def ContactIconInfo(contactid, contactname, msisdn, icondata):
     log.info("-> ContactIconInfo")
-    sendMessage(CMD_MTK_CONTACT_ICON_INFO, [writeString(contactid), writeUTF8String(
-        contactname), writeString(msisdn), writeBlob(icondata)])
+    sendMessage(
+        CMD_MTK_CONTACT_ICON_INFO,
+        [
+            writeString(contactid),
+            writeUTF8String(contactname),
+            writeString(msisdn),
+            writeBlob(icondata),
+        ],
+    )
 
 
 def ModemSignalInfo(sim1, sim2, sim2type):
     log.info("-> ModemSignalInfo")
-    sendMessage(CMD_MTK_MODEM_SIGNAL_INFO, [writeUint32(
-        sim1), writeUint32(sim2), writeUint32(sim2type)])
+    sendMessage(
+        CMD_MTK_MODEM_SIGNAL_INFO,
+        [writeUint32(sim1), writeUint32(sim2), writeUint32(sim2type)],
+    )
 
 
 def WeatherInfo(weatherstate, temp, scale, additionaltext):
     log.info("-> WeatherInfo")
-    sendMessage(CMD_MTK_WEATHER_INFO, [writeUint32(weatherstate), writeUint32(
-        temp), writeString(scale), writeString(additionaltext)])
+    sendMessage(
+        CMD_MTK_WEATHER_INFO,
+        [
+            writeUint32(weatherstate),
+            writeUint32(temp),
+            writeString(scale),
+            writeString(additionaltext),
+        ],
+    )
 
 
 def ExtraCommand(data1, data2, str1, str2):
     log.info("-> ExtraCommand")
-    sendMessage(CMD_MTK_EXTRA_COMMAND, [writeUint32(data1), writeUint32(
-        data2), writeString(str1), writeString(str2)])
+    sendMessage(
+        CMD_MTK_EXTRA_COMMAND,
+        [writeUint32(data1), writeUint32(data2), writeString(str1), writeString(str2)],
+    )
 
 
 def DateTimeFormat(dateformat, timeformat):
     log.info("-> DateTimeFormat")
-    sendMessage(CMD_MTK_DATE_TIME_FORMAT_INFO, [
-                writeString(dateformat), writeUint32(timeformat)])
+    sendMessage(
+        CMD_MTK_DATE_TIME_FORMAT_INFO,
+        [writeString(dateformat), writeUint32(timeformat)],
+    )
 
 
 def AlbumArtInfo(albumartpng):
@@ -475,20 +655,26 @@ def AlbumArtInfo(albumartpng):
 
 def CameraFrameImage(width, height, png):
     log.info("-> CameraFrameImage")
-    sendMessage(CMD_MTK_CAMERA_FRAME_IMG, [writeUint16(
-        width), writeUint16(height), writeBlob(png)])
+    sendMessage(
+        CMD_MTK_CAMERA_FRAME_IMG,
+        [writeUint16(width), writeUint16(height), writeBlob(png)],
+    )
 
 
 def KeyPressInfo(keycode, mode, modifiers):
     log.info("-> KeyPressInfo")
-    sendMessage(CMD_MTK_KEY_PRESS_INFO, [writeUint16(
-        keycode), writeUint16(mode), writeUint16(modifiers)])
+    sendMessage(
+        CMD_MTK_KEY_PRESS_INFO,
+        [writeUint16(keycode), writeUint16(mode), writeUint16(modifiers)],
+    )
 
 
 def VoiceRecorderSettingsInfo(parameter, value):
     log.info("-> VoiceRecorderSettingsInfo")
-    sendMessage(CMD_MTK_INFO_VOICE_RECODER_SETTINGS, [
-                writeUint32(parameter), writeUint32(value)])
+    sendMessage(
+        CMD_MTK_INFO_VOICE_RECODER_SETTINGS,
+        [writeUint32(parameter), writeUint32(value)],
+    )
 
 
 def VoiceRecorderStatusInfo(status):
@@ -498,8 +684,7 @@ def VoiceRecorderStatusInfo(status):
 
 def MTKDataChangeAlert(type, data1):
     log.info("-> MTKDataChangeAlert")
-    sendMessage(CMD_MTK_DATA_CHANGE_ALERT, [
-                writeUint32(type), writeUint32(data1)])
+    sendMessage(CMD_MTK_DATA_CHANGE_ALERT, [writeUint32(type), writeUint32(data1)])
 
 
 def SetMouse(onOff, absoluteOrRelative):
