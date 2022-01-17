@@ -1,1 +1,2 @@
 codi-app/* /usr/lib/codi
+systemd/user/* /lib/systemd/user

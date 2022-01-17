@@ -1,0 +1,10 @@
+[Unit]
+Description=CoDi functionalitites
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/codi/codi_server.py
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
