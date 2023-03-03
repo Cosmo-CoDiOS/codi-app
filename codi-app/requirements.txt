@@ -1,0 +1,4 @@
+pydbus
+pyserial
+evdev
+psutil

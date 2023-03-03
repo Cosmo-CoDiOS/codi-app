@@ -1,9 +1,9 @@
 [Unit]
-Description=CoDi functionalitites
+Description=CoDi functionalitites for Linux-based ROMs on the Cosmo Communicator
 
 [Service]
 Type=simple
-ExecStart=/usr/lib/codi/codi_server.py
+ExecStart=/usr/lib/codi/codi.py --daemon
 Restart=on-failure
 
 [Install]

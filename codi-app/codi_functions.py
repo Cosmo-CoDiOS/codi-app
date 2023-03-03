@@ -7,11 +7,16 @@ from datetime import datetime
 
 from gi.repository import GLib
 
-import addressbook
+
+# import addressbook
 import codi_mtk_generated_functions as mtk_cmd
 import codi_status
 import dbus_server
 import led_manager
+
+import codi_server
+
+CoDiStatus = codi_server.CodiStatus
 
 tapHistory = False
 codi_version = None
@@ -205,6 +210,7 @@ def Restart(restartMode):
         if restartMode == 0:
             mtk_cmd.SetMouse(0, 1)
             led_manager.ledsOff()
+            codi_status.CoDiStatus.device_info.lid_closed = False
             codi_status.DeviceInfo.lidClosed = False
             mtk_cmd.Setcodi_status(3, 3, 3)
             os.system(
@@ -285,7 +291,7 @@ def GetCallHistory(index):
                     i,
                     totalCdr,
                     batchSize,
-                    addressbook.contactNameForNumber(history[i][1]),
+                    addressbook.contact_name_for_number(history[i][1]),
                     history[i][1],
                     dt.day,
                     dt.month,
@@ -306,7 +312,7 @@ def GetCallHistory(index):
 
 
 def GetContacts(index):
-    addressbook.refreshContacts()
+    # addressbook.refresh_contacts()
     batch = 10
     if index == 100000:
         mtk_cmd.ContactInfo("0", 0, 100000, "", "")

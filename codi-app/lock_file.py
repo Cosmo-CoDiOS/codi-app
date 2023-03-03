@@ -6,6 +6,7 @@ import psutil
 
 log = logging.getLogger("codi-app ({})".format(__name__))
 log.setLevel(logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def check_and_kill(file):

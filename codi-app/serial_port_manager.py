@@ -2,144 +2,140 @@ import logging
 import struct
 import threading
 import time
-
 import serial
-
 import codi_stm32_generated_functions as stm32_cmd
 
 log = logging.getLogger("codi-app: ({})".format(__name__))
-isRunning = True
-socket = None
-thread = None
-lock = threading.Lock()
 
 
-def init():
-    global socket
-    global thread
-    try:
-        socket = serial.Serial("/dev/ttyS1", baudrate=115200)
+class SerialPort:
+    thread: threading.Thread
+    socket: serial.Serial
+    lock: threading.Lock = threading.Lock()
+    is_running: bool = False
+    is_uploading: bool = False
 
-        thread = threading.Thread(target=readFromSerial)
-        thread.start()
-    except Exception as e:
-        log.error(e)
+    def __init__(self):
+        try:
+            # init socket (cmd mode)
+            self.stm32_cmd_mode_switch()
+        except Exception as e:
+            log.critical(e)
 
+    def read_from_serial(self) -> None:
+        msg_header: bytes = bytes.fromhex("58 21 58 21")  # X!X!
 
-def stop():
-    global isRunning
-    global socket
-    global thread
+        log.info("[cmd_mode]: Listening to CoDi...")
 
-    isRunning = False
-    socket.cancel_read()
-    time.sleep(0.1)
-    socket.close()
-    thread.join(4)
+        while self.is_running:
+            header: bytes = self.socket.read_until(msg_header, size=300)
 
+            if len(header) >= 4 and self.is_running and header[0:4] == msg_header:
+                log.debug("[cmd_mode]: CoDi packet received, unpacking...")
+                msg_size = struct.unpack(">I", self.socket.read(4))[
+                    0
+                ]  # TODO: Type hint this
 
-def get_socket():
-    global socket
-    global isRunning
-    global thread
-    global inUpload
+                if msg_size <= 300 and self.is_running:
+                    log.debug("[cmd_mode]: Valid CoDi packet, parsing...")
+                    msg = self.socket.read(msg_size - 8)  # TODO: type hint
+                    stm32_cmd.readMessage(msg)
+                else:
+                    if self.is_running:
+                        log.error("[cmd_mode]: Malformed CoDi packet, ignoring.")
 
-    isRunning = False
-    inUpload = False
-    if socket is not None:
-        socket.cancel_read()
-    if thread is not None:
-        thread.join(4)
-    return socket
+    def stm32_cmd_mode_switch(self) -> None:
+        try:
+            if self.socket is not None:
+                self.socket.cancel_read()
+                time.sleep(1)
+                self.socket.close()
 
+            if self.thread is not None:
+                self.thread.join(4)
 
-def readFromSerial():
-    global socket
-    global isRunning
+            # connect to socket
+            self.socket = serial.Serial("/dev/ttyS1", baudrate=115200)
 
-    msgHeader = bytes.fromhex("58 21 58 21")
-    log.info("[115200]Listening...")
-    while isRunning:
-        header = socket.read_until(msgHeader, size=300)
-        # print('[115200]Found header', header)
+            self.thread = threading.Thread(target=self.read_from_serial)
+        except Exception as e:
+            log.critical(e)
 
-        # Read Size
-        if len(header) >= 4 and isRunning and header[0:4] == msgHeader:
-            msgSize = struct.unpack(">I", socket.read(4))[0]
-            # print('[115200]Found message size', msgSize)
-            if msgSize <= 300 and isRunning:
-                msg = socket.read(msgSize - 8)
-                stm32_cmd.readMessage(msg)
-            else:
-                if isRunning:
-                    log.error("[115200]Message length wrong, ignoring msg")
+    def stop_serial(self) -> None:
+        self.is_running = False
+        self.socket.cancel_read()
+        time.sleep(0.1)
+        self.socket.close()
+        self.thread.join(4)
 
+    def get_socket(self) -> serial.Serial:
+        self.is_running = False
+        self.is_uploading = False
 
-def sendCommand(cmd):
-    global socket
-    global lock
+        if self.socket is not None:
+            self.socket.cancel_read()
 
-    try:
-        lock.acquire()
-        socket.write(cmd)
-        lock.release()
-    except Exception as e:
-        log.error(e)
+        if self.thread is not None:
+            self.thread.join(4)
 
+        return self.socket
 
-def uploadReadFromSerial():
-    global socket
-    global isRunning
+    def send_command(self, cmd: int) -> None:
+        try:
+            self.lock.acquire()
+            self.socket.write(cmd)
+            self.lock.release()
+        except Exception as e:
+            log.critical(e)
 
-    log.info("[230400]Listening...")
-    while isRunning:
-        uploadResponse = socket.read()
-        if socket.in_waiting > 0:
-            uploadResponse += socket.read(socket.in_waiting)
-        log.debug("[230400]Response %r", uploadResponse)
+    def upload_read_from_serial(self) -> None:
+        log.info("[upload_mode]: Listening to CoDi...")
 
+        while self.is_running:
+            resp = self.socket.read()
+            if self.socket.in_waiting > 0:
+                resp += self.socket.read(self.socket.in_waiting)
+            log.debug("[upload_mode]: Response from coDi: %r", resp)
 
-def switchToUploadMode():
-    global socket
-    global lock
-    global thread
-    global isRunning
+    def switch_to_upload_mode(self) -> None:
+        try:
+            self.is_running = False
 
-    try:
-        isRunning = False
-        if socket is not None:
-            socket.cancel_read()
-            time.sleep(1)
-            socket.close()
-        if thread is not None:
-            thread.join(4)
+            if self.socket is not None:
+                self.socket.cancel_read()
+                time.sleep(1)
+                self.socket.close()
 
-        socket = serial.Serial("/dev/ttyS1", baudrate=230400, timeout=4)
-        thread = threading.Thread(target=uploadReadFromSerial)
-        isRunning = True
-        thread.start()
-    except Exception as e:
-        log.error(e)
+            if self.thread is not None:
+                self.thread.join(4)
 
+            # now switch
 
-def switchToCmdMode():
-    global socket
-    global lock
-    global thread
-    global isRunning
+            self.socket = serial.Serial("/dev/ttyS1", baudrate=230400, timeout=4)
 
-    try:
-        isRunning = False
-        if socket is not None:
-            socket.cancel_read()
-            time.sleep(1)
-            socket.close()
-        if thread is not None:
-            thread.join(4)
+            self.thread = threading.Thread(target=self.upload_read_from_serial)
 
-        socket = serial.Serial("/dev/ttyS1", baudrate=115200)
-        thread = threading.Thread(target=readFromSerial)
-        isRunning = True
-        thread.start()
-    except Exception as e:
-        log.error(e)
+            self.is_running = True
+
+            self.thread.start()
+        except Exception as e:
+            log.critical(e)
+
+    def switch_to_cmd_mode(self) -> None:
+        try:
+            self.is_running = False
+            if self.socket is not None:
+                self.socket.cancel_read()
+                time.sleep(1)
+                self.socket.close()
+            if self.thread is not None:
+                self.thread.join(4)
+
+            self.socket = serial.Serial("/dev/ttyS1", baudrate=115200)
+            self.thread = threading.Thread(target=self.read_from_serial)
+
+            self.is_running = True
+            self.thread.start()
+
+        except Exception as e:
+            log.error(e)

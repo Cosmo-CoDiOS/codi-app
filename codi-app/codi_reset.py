@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-import time
 
+import time
+import logging
 import lock_file
+
+log = logging.getLogger("codi_app: ({})".format(__name__))
 
 
 def stm32_hardware_reset():

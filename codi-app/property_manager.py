@@ -1,6 +1,6 @@
 import logging
 
-import addressbook
+# import addressbook
 import codi_functions as cf
 import codi_mtk_generated_functions as mtk_cmd
 import codi_status
@@ -102,7 +102,9 @@ def callStatusChanged(sender, data=None):
             CallInfo.contactName = data["Name"]
             CallInfo.msisdn = data["LineIdentification"]
             if CallInfo.contactName == "":
-                CallInfo.contactName = addressbook.contactNameForNumber(CallInfo.msisdn)
+                CallInfo.contactName = addressbook.contact_name_for_number(
+                    CallInfo.msisdn
+                )
             led_manager.ledsIncomingCall()
             if data["State"] == "incoming":
                 mtk_cmd.CallInfo(

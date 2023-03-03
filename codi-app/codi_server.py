@@ -3,7 +3,7 @@ import logging
 import signal
 import sys
 
-import addressbook
+# import addressbook
 import codi_functions as cf
 import codi_mtk_generated_functions as mtk_cmd
 import codi_status
@@ -11,33 +11,34 @@ import dbus_server
 import event_listener
 import led_manager
 import lock_file
-import serial_port_manager
+import serial_port_manager as serial_port
 from codi_generated_parser import *
 
 log = logging.getLogger("codi-app")
 logging.basicConfig(level=logging.DEBUG)
 
+CodiStatus: codi_status.CoDiStatus = codi_status.CoDiStatus()
+SerialPort: serial_port.SerialPort = serial_port.SerialPort()
 
-def signalHandler(_signo, _stack_frame):
+
+def signal_handler(_signo, _stack_frame):
     # mtk_cmd.SetMouse(0, 1)
     mtk_cmd.Setcodi_status(3, 3, 3)
     sys.exit(0)
 
 
-signal.signal(signal.SIGINT, signalHandler)
-signal.signal(signal.SIGTERM, signalHandler)
-signal.signal(signal.SIGABRT, signalHandler)
-signal.signal(signal.SIGHUP, signalHandler)
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGABRT, signal_handler)
+signal.signal(signal.SIGHUP, signal_handler)
 
 lock = "/tmp/.codi.lock"
 lock_file.check_and_kill(lock)
 lock_file.lock(lock)
 
-codi_status.init()
-
 
 def initCodi():
-    addressbook.refreshContacts()
+    #    addressbook.refresh_contacts()
     mtk_cmd.Setcodi_status(1, 7, 1)
     mtk_cmd.SetMouse(1, 1)
     cf.GetDateTime()
@@ -51,34 +52,39 @@ def initCodi():
     cf.SetCallOutput(0)
 
 
-serial_port_manager.init()
+def main():
+    if args["command"]:
+        if args["command"] == "dbus":
+            try:
+                dbus_server.init(False)
+                eval(args["cmd"])
+            except Exception as e:
+                print(e)
+            SerialPort.stop_serial()
+            exit(0)
+        else:
+            firstArg = True
+            cmd = "mtk_cmd." + args["command"] + "("
+            for i in args:
+                if i != "command":
+                    if firstArg:
+                        firstArg = False
+                    else:
+                        cmd += ", "
+                    cmd += str(args[i])
+            cmd += ")"
+            eval(cmd)
+            SerialPort.stop_serial()
+            exit(0)
 
-print("Codi Linux Server")
-if args["command"]:
-    if args["command"] == "dbus":
-        try:
-            dbus_server.init(False)
-            eval(args["cmd"])
-        except Exception as e:
-            print(e)
-        serial_port_manager.stop()
-        exit(0)
-    else:
-        firstArg = True
-        cmd = "mtk_cmd." + args["command"] + "("
-        for i in args:
-            if i != "command":
-                if firstArg:
-                    firstArg = False
-                else:
-                    cmd += ", "
-                cmd += str(args[i])
-        cmd += ")"
-        eval(cmd)
-        serial_port_manager.stop()
-        exit(0)
+    log.info("codi-app initializing...")
 
-event_listener.init()
-initCodi()
+    SerialPort.stop_serial()
+    event_listener.init()
+    initCodi()
 
-dbus_server.init()
+    dbus_server.init()
+
+
+if __name__ == "__main__":
+    main()

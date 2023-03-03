@@ -11,7 +11,11 @@ import codi_functions as cf
 import codi_stm32_generated_functions as stm32_cmd
 import lock_file
 import serial_port_manager
+from codi_server import CodiStatus, SerialPort
 from xmodem import YMODEM
+
+from codi_mtk_generated_functions import write_uint32, write_string, write_uint8
+import codi_commands
 
 log = logging.getLogger("codi-app: ({})".format(__name__))
 
@@ -19,33 +23,30 @@ ospi_url = None
 resources_url = None
 
 
-def writeUint8(p):
-    return struct.pack(">B", p)
+class CodiUpdate:
+    MSG_HEADER = bytes.fromhex("58 21 58 21")
 
+    def __init__(self):
+        pass
 
-def writeUint32(p):
-    return struct.pack(">I", p)
+    def __send_message(self, cmd_id, args=[], session_id="00 00 00 01"):
+        cmd_id = write_uint32(cmd_id)
+        cmd_session_id = bytes.fromhex(session_id)
 
+        msg_length = (
+            len(self.MSG_HEADER) + 4 + len(cmd_session_id) + len(cmd_session_id)
+        )
 
-def writeString(s):
-    return writeUint32(len(s)) + s.encode()
+        for arg in args:
+            msg_length += len(arg)
 
+        cmd = self.MSG_HEADER + write_uint32(msg_length) + cmd_id + cmd_session_id
 
-def sendMessage(commandId, args=None, sessionId="00 00 00 01"):
-    if args is None:
-        args = []
-    msgHeader = bytes.fromhex("58 21 58 21")
-    cmdId = writeUint32(commandId)
-    cmdSessionId = bytes.fromhex(sessionId)
-    # cmdSessionId = bytes.fromhex('00 00 00 01')
-    msgLength = len(msgHeader) + 4 + len(cmdId) + len(cmdSessionId)
-    for i in args:
-        msgLength += len(i)
+        for args in args:
+            cmd += arg
 
-    cmd = msgHeader + writeUint32(msgLength) + cmdId + cmdSessionId
-    for i in args:
-        cmd += i
-    serial_port_manager.sendCommand(list(cmd))
+        # send packet to stm32
+        SerialPort.send_command(list(cmd))
 
 
 def check_new_fota_versions_available():
@@ -53,8 +54,8 @@ def check_new_fota_versions_available():
     global resources_url
 
     time.sleep(1)  # Wait for listening thread to get started
-    sendMessage(stm32_cmd.CMD_MTK_GET_CODI_FLASH_VERSION)
-    sendMessage(stm32_cmd.CMD_MTK_GET_PROTOCOL_VERSION)
+    send_message(stm32_cmd.CMD_MTK_GET_CODI_FLASH_VERSION)
+    send_message(stm32_cmd.CMD_MTK_GET_PROTOCOL_VERSION)
     # download available versions - https://fota.planetcom.co.uk/stm32flash/cosmo_stm32_firmware_versions.txt
     resource_version = {}
     newest_version = None
@@ -88,19 +89,22 @@ def check_new_fota_versions_available():
     time.sleep(2)  # Wait for CODI to reply
     print(
         "Current CODI versions:",
-        cf.get_codi_version(),
-        cf.get_resources_version(),
-        cf.get_protocol_major(),
-        cf.get_protocol_minor(),
+        CodiStatus.info.codi_version,
+        CodiStatus.info.codi_resources_version,
+        CodiStatus.info.codi_protocol.major_version,
+        CodiStatus.info.codi_protocol.major_version,
     )
     print("Newest Server Version:", newest_version)
     print("Matching Resource Server Version:", resource_version[newest_version])
 
-    if cf.get_codi_version() is not None and cf.get_resources_version() is not None:
+    if (
+        CodiStatus.info.codi_version is not None
+        and CodiStatus.info.codi_resources_version is not None
+    ):
         return LooseVersion(newest_version) > LooseVersion(
-            cf.get_codi_version().replace("V", "")
+            CodiStatus.info.codi_version.replace("V", "")
         ) or LooseVersion(resource_version[newest_version]) > LooseVersion(
-            cf.get_resources_version().replace("R", "")
+            CodiStatus.info.codi_resources_version.replace("R", "")
         )
     else:
         return False
@@ -147,20 +151,21 @@ def send_file(file, slow_mode):
 
     time.sleep(1)  # Wait for listening thread to get started
     print("Switch to upload")
-    serial_port_manager.switchToUploadMode()
+
+    SerialPort.switch_to_upload_mode()
     time.sleep(1)
     stm32_into_download_mode(True)
     time.sleep(4)
     log.info("Sending 140 '0d oa' session 5 - requesting reset")
-    sendMessage(140, [writeUint8(0x0D), writeUint8(0x0A)], "00 00 00 05")
+    send_message(140, [write_uint8(0x0D), write_uint8(0x0A)], "00 00 00 05")
     time.sleep(2)
     stm32_hardware_reset()
     stm32_into_download_mode(False)
     print("Send Command 1")
-    serial_port_manager.sendCommand(writeString("1"))
+    SerialPort.send_command(write_string("1"))
     time.sleep(2)
 
-    ser = serial_port_manager.get_socket()
+    ser = SerialPort.get_socket()
 
     modem = YMODEM(ser)
 
@@ -172,7 +177,7 @@ def send_file(file, slow_mode):
         print("\r\nSend completed:", file_sent)
     except Exception as e:
         log.error(e)
-    serial_port_manager.switchToCmdMode()
+    SerialPort.switch_to_cmd_mode()
     print("Finished")
     return file_sent
 
@@ -202,7 +207,7 @@ lock = "/tmp/.codi.lock"
 killed = lock_file.check_and_kill(lock)
 lock_file.lock(lock)
 
-serial_port_manager.init()
+SerialPort = serial_port_manager()
 fileSent = False
 if len(args) > 0:
     fileSent = send_file(args[0], options.slow_mode)
@@ -216,7 +221,7 @@ else:
         print("R:", resources_url)
         print("F:", ospi_url)
     else:
-        if cf.get_codi_version() is None:
+        if CodiStatus.info.codi_version is None:
             print(
                 "CODI Error getting existing version, a reset might help or a reflash may be needed"
             )
@@ -230,7 +235,7 @@ else:
                 "Note firmware version numbers are early in the binary so a partial flash may still show as up to date"
             )
 
-serial_port_manager.stop()
+SerialPort.stop_serial()
 
 if killed:
     print("")
